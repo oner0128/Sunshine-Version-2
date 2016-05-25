@@ -19,9 +19,11 @@ package com.example.android.sunshine.app;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +37,7 @@ public class DetailActivity extends ActionBarActivity {
         setContentView(R.layout.activity_detail);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, new DetailFragment())
                     .commit();
         }
     }
@@ -48,6 +50,8 @@ public class DetailActivity extends ActionBarActivity {
         return true;
     }
 
+
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -57,7 +61,7 @@ public class DetailActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            startActivity(new Intent(this,SettingsActivity.class));
+            startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
 
@@ -67,21 +71,47 @@ public class DetailActivity extends ActionBarActivity {
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment {
+    public static class DetailFragment extends Fragment {
+        final static String LOG_TAG = DetailFragment.class.getSimpleName();
+        final static String FORECAST_SHARE_HASHTAG = "#SunShineApp";
+        String mForecastStr;
+
         TextView tv_dayInfo_detail;
-        public PlaceholderFragment() {
+
+        public DetailFragment() {
+            setHasOptionsMenu(true);
         }
 
+        @Override
+        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            super.onCreateOptionsMenu(menu, inflater);
+            inflater.inflate(R.menu.detailfragment, menu);
+            MenuItem menuItem = menu.findItem(R.id.action_share);
+            android.support.v7.widget.ShareActionProvider mShareActionProvider= (android.support.v7.widget.ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+            if (mShareActionProvider!=null){
+                mShareActionProvider.setShareIntent(createShareForecastIntent());
+            }else {
+                android.util.Log.d(LOG_TAG,"A share action is null?");
+            }
+        }
+        private Intent createShareForecastIntent() {
+            Intent shareIntent=new Intent(Intent.ACTION_SEND);
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);//设置FLAG，返回时不会留在INTENT启动的APP中
+            shareIntent.putExtra(Intent.EXTRA_TEXT, mForecastStr+FORECAST_SHARE_HASHTAG);
+            shareIntent.setType("text/plain");
+            return shareIntent;
+        }
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
 
             View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 //            String forecast=savedInstanceState.getString(Intent.EXTRA_TEXT);
-            Intent intent=getActivity().getIntent();
-            String forecast=intent.getStringExtra(Intent.EXTRA_TEXT);
-            tv_dayInfo_detail= (TextView) rootView.findViewById(R.id.tv_dayInfo_detail);
-            tv_dayInfo_detail.setText(forecast);
+            Intent intent = getActivity().getIntent();
+            if (intent!=null&&intent.hasExtra(Intent.EXTRA_TEXT)){
+            mForecastStr = intent.getStringExtra(Intent.EXTRA_TEXT);
+            tv_dayInfo_detail = (TextView) rootView.findViewById(R.id.tv_dayInfo_detail);
+            tv_dayInfo_detail.setText(mForecastStr);}
             return rootView;
         }
     }

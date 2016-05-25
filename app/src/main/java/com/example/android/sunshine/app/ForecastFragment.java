@@ -5,9 +5,11 @@ package com.example.android.sunshine.app;
  */
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -45,6 +47,7 @@ public class ForecastFragment extends Fragment {
     EditText et_Postcode;
     static ArrayAdapter<String> forecastAdapter;
 
+
     public ForecastFragment() {
     }
 
@@ -58,13 +61,13 @@ public class ForecastFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        String[] forecastArray = {
-                "Today - Sunny - 88/63", "Today - Rain - 70/59",
-                "Tomorrow - Sunny - 88/63", "Weds - Foggy - 70/40",
-                "Fir - Cloudy - 88/63", "Tus -Heavy Rain - 65/56",
-                "Sun - Sunny - 88/63", "Sat - HELP TRAPPED IN WEATHERSTATION - 60/51"};
-        List<String> weekForecast = new ArrayList<>(Arrays.asList(forecastArray));
-
+//        String[] forecastArray = {
+//                "Today - Sunny - 88/63", "Today - Rain - 70/59",
+//                "Tomorrow - Sunny - 88/63", "Weds - Foggy - 70/40",
+//                "Fir - Cloudy - 88/63", "Tus -Heavy Rain - 65/56",
+//                "Sun - Sunny - 88/63", "Sat - HELP TRAPPED IN WEATHERSTATION - 60/51"};
+//        List<String> weekForecast = new ArrayList<>(Arrays.asList(forecastArray));
+        List<String> weekForecast = new ArrayList<>();
         listView = (ListView) rootView.findViewById(R.id.listview_forecast);
 
         forecastAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast,
@@ -79,7 +82,6 @@ public class ForecastFragment extends Fragment {
                 startActivity(intent);
             }
         });
-
         return rootView;
     }
 
@@ -90,13 +92,26 @@ public class ForecastFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_refresh) {
-            Toast.makeText(getActivity(), "ok", Toast.LENGTH_SHORT).show();
-            FetchWeatherTask weatherTask = new FetchWeatherTask();
-            weatherTask.execute("1795565");
+            updateWeather();
+        }if (item.getItemId() == R.id.action_map) {
+            startActivity(new Intent());
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateWeather() {
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+        SharedPreferences pref_general = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = pref_general.getString(getString(R.string.pref_key_Location), getString(R.string.pref_default_Location));
+        weatherTask.execute(location);
     }
 
     private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
@@ -111,7 +126,9 @@ public class ForecastFragment extends Fragment {
             String forecastJsonStr = null;
 
 //            String format = "xml";
-            String units = "metric";
+//            String units = "metric";
+            String units=PreferenceManager.getDefaultSharedPreferences(getActivity()).
+                    getString(getString(R.string.pref_temperature_Units_key),getString(R.string.pref_temperature_Units_defaul));
             String type = "accurate";
             String appid = "b21e787cebb54337b23e4816da79da62";
             int numdays = 24;
@@ -199,14 +216,17 @@ public class ForecastFragment extends Fragment {
         final String JSON_date = "dt_txt";
         final String JSON_MAIN = "main";
         final String JSON_TEMP = "temp";
+        final String JSON_CITY = "city";
+        final String JSON_CITYNAME = "name";
         final String JSON_WEATHER = "weather";
         final String JSON_DESCRIPTION = "description";
         final String JSON_TEMP_MAX = "temp_max";
         final String JSON_TEMP_MIN = "temp_min";
         JSONObject weatherObject = new JSONObject(weatherJsonStr);
         JSONArray days = weatherObject.getJSONArray(JSON_LIST);
+        JSONObject city = weatherObject.getJSONObject(JSON_CITY);
         String[] daysInfo = new String[numdays];
-
+        String cityname = city.getString(JSON_CITYNAME);
         for (int i = 0; i < days.length(); i++) {
             JSONObject dayInfo = days.getJSONObject(i);
 
@@ -217,7 +237,7 @@ public class ForecastFragment extends Fragment {
             double temp_max = temperatureInfo.getDouble(JSON_TEMP_MAX);
             double temp_min = temperatureInfo.getDouble(JSON_TEMP_MIN);
             String daystr = date + " - " + weather + " - " + temp_max + "/" + temp_min;
-            daysInfo[i] = daystr;
+            daysInfo[i] = cityname + " - " + daystr;
         }
 //        for (String s : daysInfo) {
 //            Log.v(LOG_TAG, "Forecast entry: " + s);
