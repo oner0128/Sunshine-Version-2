@@ -22,7 +22,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +35,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -101,7 +99,8 @@ public class ForecastFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_refresh) {
             updateWeather();
-        }if (item.getItemId() == R.id.action_map) {
+        }
+        if (item.getItemId() == R.id.action_map) {
             startActivity(new Intent());
         }
         return super.onOptionsItemSelected(item);
@@ -126,9 +125,7 @@ public class ForecastFragment extends Fragment {
             String forecastJsonStr = null;
 
 //            String format = "xml";
-//            String units = "metric";
-            String units=PreferenceManager.getDefaultSharedPreferences(getActivity()).
-                    getString(getString(R.string.pref_temperature_Units_key),getString(R.string.pref_temperature_Units_defaul));
+            String units = "metric";
             String type = "accurate";
             String appid = "b21e787cebb54337b23e4816da79da62";
             int numdays = 24;
@@ -227,6 +224,8 @@ public class ForecastFragment extends Fragment {
         JSONObject city = weatherObject.getJSONObject(JSON_CITY);
         String[] daysInfo = new String[numdays];
         String cityname = city.getString(JSON_CITYNAME);
+        String unitType = PreferenceManager.getDefaultSharedPreferences(getActivity()).
+                getString(getString(R.string.pref_temperature_Units_key), getString(R.string.pref_temperature_Units_defaul));
         for (int i = 0; i < days.length(); i++) {
             JSONObject dayInfo = days.getJSONObject(i);
 
@@ -236,7 +235,7 @@ public class ForecastFragment extends Fragment {
             JSONObject temperatureInfo = dayInfo.getJSONObject(JSON_MAIN);
             double temp_max = temperatureInfo.getDouble(JSON_TEMP_MAX);
             double temp_min = temperatureInfo.getDouble(JSON_TEMP_MIN);
-            String daystr = date + " - " + weather + " - " + temp_max + "/" + temp_min;
+            String daystr = date + " - " + weather + " - " + getFormatMaxMintemp(temp_max, temp_min,unitType);
             daysInfo[i] = cityname + " - " + daystr;
         }
 //        for (String s : daysInfo) {
@@ -245,5 +244,18 @@ public class ForecastFragment extends Fragment {
 
         return daysInfo;
 
+    }
+
+    private String getFormatMaxMintemp(double maxtemp, double mintemp, String unitTpye) {
+
+        if (unitTpye.equals("imperial")) {
+            maxtemp = maxtemp * 1.8 + 32;
+            mintemp = mintemp * 1.8 + 32;
+        } else if(!unitTpye.equals("metric")){
+            Log.d(LOG_TAG, "could find the unitType");
+        }
+        long roundedMax = Math.round(maxtemp);
+        long roundedMin = Math.round(mintemp);
+        return roundedMax + "/" + roundedMin;
     }
 }

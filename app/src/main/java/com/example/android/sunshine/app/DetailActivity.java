@@ -51,7 +51,6 @@ public class DetailActivity extends ActionBarActivity {
     }
 
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -87,20 +86,23 @@ public class DetailActivity extends ActionBarActivity {
             super.onCreateOptionsMenu(menu, inflater);
             inflater.inflate(R.menu.detailfragment, menu);
             MenuItem menuItem = menu.findItem(R.id.action_share);
-            android.support.v7.widget.ShareActionProvider mShareActionProvider= (android.support.v7.widget.ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
-            if (mShareActionProvider!=null){
+            android.support.v7.widget.ShareActionProvider mShareActionProvider = (android.support.v7.widget.ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+            if (mShareActionProvider != null) {
                 mShareActionProvider.setShareIntent(createShareForecastIntent());
-            }else {
-                android.util.Log.d(LOG_TAG,"A share action is null?");
+            } else {
+                android.util.Log.d(LOG_TAG, "A share action is null?");
             }
         }
+
         private Intent createShareForecastIntent() {
-            Intent shareIntent=new Intent(Intent.ACTION_SEND);
-            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);//设置FLAG，返回时不会留在INTENT启动的APP中
-            shareIntent.putExtra(Intent.EXTRA_TEXT, mForecastStr+FORECAST_SHARE_HASHTAG);
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);//设置FLAG，返回时不会留在INTENT启动
+            // 的APP中,FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET在API21中被弃用，用 FLAG_ACTIVITY_NEW_DOCUMENT代替
+            shareIntent.putExtra(Intent.EXTRA_TEXT, mForecastStr + FORECAST_SHARE_HASHTAG);
             shareIntent.setType("text/plain");
             return shareIntent;
         }
+
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
@@ -108,10 +110,11 @@ public class DetailActivity extends ActionBarActivity {
             View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 //            String forecast=savedInstanceState.getString(Intent.EXTRA_TEXT);
             Intent intent = getActivity().getIntent();
-            if (intent!=null&&intent.hasExtra(Intent.EXTRA_TEXT)){
-            mForecastStr = intent.getStringExtra(Intent.EXTRA_TEXT);
-            tv_dayInfo_detail = (TextView) rootView.findViewById(R.id.tv_dayInfo_detail);
-            tv_dayInfo_detail.setText(mForecastStr);}
+            if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
+                mForecastStr = intent.getStringExtra(Intent.EXTRA_TEXT);
+                tv_dayInfo_detail = (TextView) rootView.findViewById(R.id.tv_dayInfo_detail);
+                tv_dayInfo_detail.setText(mForecastStr);
+            }
             return rootView;
         }
     }
