@@ -1,4 +1,4 @@
-package com.example.android.sunshine.app;
+package com.example.android.sunshine.app.data;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -8,12 +8,12 @@ import android.util.Log;
 /**
  * Created by hrong on 2016/6/1.
  */
-public class WeatherDBHelper extends SQLiteOpenHelper {
+public class WeatherDbHelper extends SQLiteOpenHelper {
     public static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = "weather.db";
-    public static final String TAG_LOG =WeatherDBHelper.class.getSimpleName();
+    public static final String TAG_LOG =WeatherDbHelper.class.getSimpleName();
 
-    public WeatherDBHelper(Context context) {
+    public WeatherDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -21,10 +21,10 @@ public class WeatherDBHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         final String SQL_CREATE_LOCATION_TABLE = "CREATE TABLE " + WeatherContract.LocationEntry.TABLE_NAME + " ("
                 + WeatherContract.LocationEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING + " TEXT UNIQUE NOT NULL,"
-                + WeatherContract.LocationEntry.COLUMN_CITY_NAME + " INTEGER NOT NULL,"
-                + WeatherContract.LocationEntry.COLUMN_COORD_LAT + " REAL NOT NULL,"
-                + WeatherContract.LocationEntry.COLUMN_COORD_LONG + " REAL NOT NULL," + ");";
+                + WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING + " TEXT UNIQUE NOT NULL, "
+                + WeatherContract.LocationEntry.COLUMN_CITY_NAME + " INTEGER NOT NULL, "
+                + WeatherContract.LocationEntry.COLUMN_COORD_LAT + " REAL NOT NULL, "
+                + WeatherContract.LocationEntry.COLUMN_COORD_LONG + " REAL NOT NULL" + " );";
 
         final String SQL_CREATE_WEATHER_TABLE = "CREATE TABLE " + WeatherContract.WeatherEntry.TABLE_NAME + " ("
                 + WeatherContract.WeatherEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -42,12 +42,12 @@ public class WeatherDBHelper extends SQLiteOpenHelper {
 
                 // Set up the location column as a foreign key to location table.
                 + "FOREIGN KEY (" + WeatherContract.WeatherEntry.COLUMN_LOC_KEY + ") REFERENCES "
-                + WeatherContract.LocationEntry.TABLE_NAME + " (" + WeatherContract.LocationEntry._ID + ");";
+                + WeatherContract.LocationEntry.TABLE_NAME + " (" + WeatherContract.LocationEntry._ID + "), " +
 
-        // To assure the application have just one weather entry per day
-        // per location, it's created a UNIQUE constraint with REPLACE strategy
-        // " UNIQUE (" + WeatherContract.WeatherEntry.COLUMN_DATE + ", " +
-        // WeatherContract.WeatherEntry.COLUMN_LOC_KEY + ") ON CONFLICT REPLACE);";
+                // To assure the application have just one weather entry per day
+                // per location, it's created a UNIQUE constraint with REPLACE strategy
+                " UNIQUE (" + WeatherContract.WeatherEntry.COLUMN_DATE + ", "
+                + WeatherContract.WeatherEntry.COLUMN_LOC_KEY + ") ON CONFLICT REPLACE);";
 
         sqLiteDatabase.execSQL(SQL_CREATE_LOCATION_TABLE);
         sqLiteDatabase.execSQL(SQL_CREATE_WEATHER_TABLE);
