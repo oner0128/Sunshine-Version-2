@@ -26,15 +26,29 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class MainActivity extends ActionBarActivity {
+    private String mLocation;
     private final String LOG_TAG = MainActivity.class.getSimpleName();
+    private final String FORECASTFRAGMENT_TAG = "MainActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new ForecastFragment())
+                    .add(R.id.container, new ForecastFragment(), FORECASTFRAGMENT_TAG)
                     .commit();
+        }
+        mLocation = Utility.getPreferredLocation(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mLocation != Utility.getPreferredLocation(this)){
+            ForecastFragment forecastFragment= (ForecastFragment) getSupportFragmentManager().findFragmentByTag(FORECASTFRAGMENT_TAG);
+            forecastFragment.onLocationChanged();
+            mLocation=Utility.getPreferredLocation(this);
         }
     }
 
@@ -54,7 +68,7 @@ public class MainActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            startActivity(new Intent(this,SettingsActivity.class));
+            startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
         if (id == R.id.action_map) {
@@ -66,13 +80,11 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void openPreferenceLocationInMap() {
-        SharedPreferences sharePref= PreferenceManager.getDefaultSharedPreferences(this);
-        String location=sharePref.getString(getString(R.string.pref_key_Location),getString(R.string.pref_default_Location));
-        Uri geoLocation=Uri.parse("geo:0,0?").buildUpon().appendQueryParameter("q",location).build();
-        Intent intent =new Intent(Intent.ACTION_VIEW);
+        Uri geoLocation = Uri.parse("geo:0,0?").buildUpon().appendQueryParameter("q", mLocation).build();
+        Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(geoLocation);
-        if (intent.resolveActivity(getPackageManager())!=null)
+        if (intent.resolveActivity(getPackageManager()) != null)
             startActivity(intent);
-        else Log.d(LOG_TAG,"couldn't call"+location+",no receiving apps installed");
+        else Log.d(LOG_TAG, "couldn't call" + mLocation + ",no receiving apps installed");
     }
 }

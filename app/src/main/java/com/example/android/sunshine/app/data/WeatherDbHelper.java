@@ -24,7 +24,7 @@ public class WeatherDbHelper extends SQLiteOpenHelper {
                 + WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING + " TEXT UNIQUE NOT NULL, "
                 + WeatherContract.LocationEntry.COLUMN_CITY_NAME + " INTEGER NOT NULL, "
                 + WeatherContract.LocationEntry.COLUMN_COORD_LAT + " REAL NOT NULL, "
-                + WeatherContract.LocationEntry.COLUMN_COORD_LONG + " REAL NOT NULL" + " );";
+                + WeatherContract.LocationEntry.COLUMN_COORD_LON + " REAL NOT NULL" + " );";
 
         final String SQL_CREATE_WEATHER_TABLE = "CREATE TABLE " + WeatherContract.WeatherEntry.TABLE_NAME + " ("
                 + WeatherContract.WeatherEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -57,8 +57,8 @@ public class WeatherDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS"+ WeatherContract.WeatherEntry.TABLE_NAME);
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS"+ WeatherContract.LocationEntry.TABLE_NAME);
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS "+ WeatherContract.WeatherEntry.TABLE_NAME);
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS "+ WeatherContract.LocationEntry.TABLE_NAME);
         onCreate(sqLiteDatabase);
     }
 }

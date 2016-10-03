@@ -21,8 +21,8 @@ import java.util.Set;
     in our solution to use these as-given.
  */
 public class TestUtilities extends AndroidTestCase {
-    static final String TEST_LOCATION = "99705";
-    static final long TEST_DATE = 1419033600L;  // December 20th, 2014
+    static final String TEST_LOCATION = "1790630";
+    static final long TEST_DATE = 1475131809L;  // December 20th, 2014
 
     static void validateCursor(String error, Cursor valueCursor, ContentValues expectedValues) {
         assertTrue("Empty cursor returned. " + error, valueCursor.moveToFirst());
@@ -72,7 +72,7 @@ public class TestUtilities extends AndroidTestCase {
         testValues.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING, TEST_LOCATION);
         testValues.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME, "North Pole");
         testValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, 64.7488);
-        testValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, -147.353);
+        testValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LON, -147.353);
 
         return testValues;
     }

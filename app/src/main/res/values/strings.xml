@@ -28,7 +28,7 @@
     <string name="pref_header_general">General</string>
 
     <string name="pref_title_Location">Location</string>
-    <string name="pref_default_Location" translatable="false">1795565</string>
+    <string name="pref_default_Location" translatable="false">1790630</string>
     <string name="pref_key_Location" translatable="false">Location</string>
 
     <string name="pref_temperature_Units">Temperature Units</string>

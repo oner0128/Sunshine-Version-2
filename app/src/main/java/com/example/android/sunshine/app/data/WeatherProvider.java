@@ -160,7 +160,7 @@ public class WeatherProvider extends ContentProvider {
         Uri returnUri;
         switch (match) {
             case WEATHER: {
-                normalizeDate(contentValues);
+//                normalizeDate(contentValues);
                 long _id = db.insert(WeatherContract.WeatherEntry.TABLE_NAME, null, contentValues);
                 if (_id > 0)
                     returnUri = WeatherContract.WeatherEntry.builtWeatherUri(_id);
@@ -181,13 +181,13 @@ public class WeatherProvider extends ContentProvider {
         return returnUri;
     }
 
-    private void normalizeDate(ContentValues values) {
-        // normalize the date value
-        if (values.containsKey(WeatherContract.WeatherEntry.COLUMN_DATE)) {
-            long dateValue = values.getAsLong(WeatherContract.WeatherEntry.COLUMN_DATE);
-            values.put(WeatherContract.WeatherEntry.COLUMN_DATE, WeatherContract.normalizeDate(dateValue));
-        }
-    }
+//    private void normalizeDate(ContentValues values) {
+//        // normalize the date value
+//        if (values.containsKey(WeatherContract.WeatherEntry.COLUMN_DATE)) {
+//            long dateValue = values.getAsLong(WeatherContract.WeatherEntry.COLUMN_DATE);
+//            values.put(WeatherContract.WeatherEntry.COLUMN_DATE, WeatherContract.normalizeDate(dateValue));
+//        }
+//    }
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
@@ -218,7 +218,7 @@ public class WeatherProvider extends ContentProvider {
         final int isUpdate;
         switch (mUriMatcher.match(uri)) {
             case WEATHER: {
-                normalizeDate(contentValues);
+//                normalizeDate(contentValues);
                 isUpdate = db.update(WeatherContract.WeatherEntry.TABLE_NAME, contentValues, selection, selectionArgs);
                 break;
             }
@@ -243,13 +243,13 @@ public class WeatherProvider extends ContentProvider {
                 int returnInt = 0;
                 try {
                     for (ContentValues value : values) {
-                        normalizeDate(value);
+//                        normalizeDate(value);
                         long _id = db.insert(WeatherContract.WeatherEntry.TABLE_NAME, null, value);
-                        if (_id != 0) {
+                        if (_id != -1) {
                             returnInt++;
                         }
-                        db.setTransactionSuccessful();
                     }
+                    db.setTransactionSuccessful();
                 } finally {
                     db.endTransaction();
                 }

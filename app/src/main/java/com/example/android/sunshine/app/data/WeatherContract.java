@@ -38,7 +38,7 @@ public class WeatherContract {
 
         public static final String COLUMN_COORD_LAT = "coord_lat";
 
-        public static final String COLUMN_COORD_LONG = "coord_long";
+        public static final String COLUMN_COORD_LON = "coord_lon";
         public static final String COLUMN_CITY_NAME = "city_name";
 
         public static Uri builtWeatherUri(long id) {
@@ -76,14 +76,14 @@ public class WeatherContract {
              return CONTENT_URI.buildUpon().appendPath(locationSetting).build();
         }
         public static Uri buildWeatherLocationWithStartDate(String locationSetting,long startDate){
-            long normlizedDate=normalizeDate(startDate);
+//            long normlizedDate=normalizeDate(startDate);
             return CONTENT_URI.buildUpon().appendPath(locationSetting)
-                    .appendQueryParameter(COLUMN_DATE,Long.toString(normlizedDate)).build();
+                    .appendQueryParameter(COLUMN_DATE,Long.toString(startDate)).build();
         }
         public static Uri buildWeatherLocationWithDate(String locationSetting,long Date){
-            long normlizedDate=normalizeDate(Date);
+//            long normlizedDate=normalizeDate(Date);
             return CONTENT_URI.buildUpon().appendPath(locationSetting)
-                    .appendPath(Long.toString(normlizedDate)).build();
+                    .appendPath(Long.toString(Date)).build();
         }
         public static String getLocationSettingFromUri(Uri uri){
             return uri.getPathSegments().get(1);
