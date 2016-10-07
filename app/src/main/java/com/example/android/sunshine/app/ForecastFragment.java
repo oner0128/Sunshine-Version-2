@@ -42,8 +42,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING,
             WeatherContract.LocationEntry.COLUMN_COORD_LAT,
             WeatherContract.LocationEntry.COLUMN_COORD_LON,
-            WeatherContract.LocationEntry.COLUMN_CITY_NAME
-    };
+            WeatherContract.LocationEntry.COLUMN_CITY_NAME,
+            WeatherContract.WeatherEntry.COLUMN_WEATHER_ID};
     static final int COL_WEATHER_ID = 0;
     static final int COL_WEATHER_DATE = 1;
     static final int COL_WEATHER_DESC = 2;
@@ -53,7 +53,9 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     static final int COL_COORD_LAT = 6;
     static final int COL_COORD_LON = 7;
     static final int COL_CITY_NAME = 8;
+    static final int COL_WEATHER_CONDITION_ID = 9;
     static final int FORECASE_LOADER_ID = 1;
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         getLoaderManager().initLoader(FORECASE_LOADER_ID, null, this);
@@ -79,12 +81,12 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor cursor= (Cursor) parent.getItemAtPosition(position);
-                if (cursor!=null){
-                    String locationSetting=Utility.getPreferredLocation(getActivity());
-                    Intent intent=new Intent(getActivity(),DetailActivity.class)
+                Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+                if (cursor != null) {
+                    String locationSetting = Utility.getPreferredLocation(getActivity());
+                    Intent intent = new Intent(getActivity(), DetailActivity.class)
                             .setData(WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
-                                    locationSetting,cursor.getLong(COL_WEATHER_DATE)));
+                                    locationSetting, cursor.getLong(COL_WEATHER_DATE)));
                     startActivity(intent);
                 }
             }
@@ -122,14 +124,13 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
 
-
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String locationSetting = Utility.getPreferredLocation(getActivity());
-//        long startTime=System.currentTimeMillis()/1000;
+        long startTime = System.currentTimeMillis() / 1000;
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
-        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocation(
-                locationSetting);
+        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
+                locationSetting, startTime);
         return new CursorLoader(getActivity(), weatherForLocationUri,
                 FORECAST_COLUNMS, null, null, sortOrder);
     }
@@ -144,7 +145,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         forecastAdapter.swapCursor(null);
     }
 
-    public void onLocationChanged(){
+    public void onLocationChanged() {
         updateWeather();
         getLoaderManager().restartLoader(FORECASE_LOADER_ID, null, this);
     }

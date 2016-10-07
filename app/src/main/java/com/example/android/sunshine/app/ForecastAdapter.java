@@ -1,13 +1,14 @@
 package com.example.android.sunshine.app;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.android.sunshine.app.data.WeatherContract;
 
 /**
  * {@link ForecastAdapter} exposes a list of weather forecasts
@@ -19,36 +20,35 @@ public class ForecastAdapter extends CursorAdapter {
     }
 
     /**
-     * Prepare the weather high/lows for presentation.
+     * Cache of the children views for a forecast list item.
      */
-    private String formatHighLows(double high, double low) {
-        boolean isMetric = Utility.isMetric(mContext);
-        String highLowStr = Utility.formatTemperature(high, isMetric) + "/" + Utility.formatTemperature(low, isMetric);
-        return highLowStr;
-    }
+    public static class ViewHodler {
+        public final ImageView iconView;
+        public final TextView dateView;
+        public final TextView descriptionView;
+        public final TextView highTempView;
+        public final TextView lowTempView;
 
-    /*
-        This is ported from FetchWeatherTask --- but now we go straight from the cursor to the
-        string.
-     */
-    private String convertCursorRowToUXFormat(Cursor cursor) {
-        String highAndLow = formatHighLows(
-                cursor.getDouble(ForecastFragment.COL_WEATHER_MAX_TEMP),
-                cursor.getDouble(ForecastFragment.COL_WEATHER_MIN_TEMP));
-
-//        return Utility.formatDate(cursor.getLong(idx_date)) +
-//                " - " + cursor.getString(idx_short_desc) +
-//                " - " + highAndLow;
-        return cursor.getString(ForecastFragment.COL_CITY_NAME)+" - "+Utility.formatDate(cursor.getLong(ForecastFragment.COL_WEATHER_DATE))+" - "+ cursor.getString(ForecastFragment.COL_WEATHER_DESC) +
-                " - " + highAndLow;
+        public ViewHodler(View view) {
+            this.iconView = (ImageView) view.findViewById(R.id.list_item_icon);
+            this.dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
+            this.descriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
+            this.highTempView = (TextView) view.findViewById(R.id.list_item_high_textview);
+            this.lowTempView = (TextView) view.findViewById(R.id.list_item_low_textview);
+        }
     }
 
     /*
         Remember that these views are reused as needed.
      */
+
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        View view = LayoutInflater.from(context).inflate(R.layout.list_item_forecast, parent, false);
+        int viewType = getItemViewType(cursor.getPosition());
+        int layoutId = (viewType == VIEW_TYPE_TODAY) ? R.layout.list_item_forecast_today : R.layout.list_item_forecast;
+        View view = LayoutInflater.from(context).inflate(layoutId, parent, false);
+        ViewHodler viewHodler = new ViewHodler(view);
+        view.setTag(viewHodler);
         return view;
     }
 
@@ -59,8 +59,33 @@ public class ForecastAdapter extends CursorAdapter {
     public void bindView(View view, Context context, Cursor cursor) {
         // our view is pretty simple here --- just a text view
         // we'll keep the UI functional with a simple (and slow!) binding.
+        int weatherId = cursor.getInt(ForecastFragment.COL_WEATHER_CONDITION_ID);
+        ViewHodler viewHodler = (ViewHodler) view.getTag();
+        //imageIcon
+         int viewType=getItemViewType(cursor.getPosition()); ;
+        viewHodler.iconView.setImageResource(Utility.getIconResourceForWeatherCondition(weatherId,viewType));
+        //date
+        viewHodler.dateView.setText(Utility.formatDate(cursor.getLong(ForecastFragment.COL_WEATHER_DATE)));
+        //description
+        viewHodler.descriptionView.setText(cursor.getString(ForecastFragment.COL_WEATHER_DESC));
+        //high And low temp
+        boolean isMetric = Utility.isMetric(context);
+        String format_highTemp = Utility.formatTemperature(context, cursor.getDouble(ForecastFragment.COL_WEATHER_MAX_TEMP), isMetric);
+        String format_lowTemp = Utility.formatTemperature(context, cursor.getDouble(ForecastFragment.COL_WEATHER_MIN_TEMP), isMetric);
+        viewHodler.highTempView.setText(format_highTemp);
+        viewHodler.lowTempView.setText(format_lowTemp);
+    }
 
-        TextView tv = (TextView)view;
-        tv.setText(convertCursorRowToUXFormat(cursor));
+    static final int VIEW_TYPE_TODAY = 0;
+    static final int VIEW_TYPE_FUTURE = 1;
+
+    @Override
+    public int getItemViewType(int position) {
+        return (position == 0) ? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE;
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return 2;
     }
 }

@@ -16,10 +16,8 @@
 package com.example.android.sunshine.app;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -29,24 +27,29 @@ public class MainActivity extends ActionBarActivity {
     private String mLocation;
     private final String LOG_TAG = MainActivity.class.getSimpleName();
     private final String FORECASTFRAGMENT_TAG = "MainActivity";
-
+    private static final String DETAILFRAGMENT_TAG = "DFTAG";
+    private boolean mTwoPane;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new ForecastFragment(), FORECASTFRAGMENT_TAG)
-                    .commit();
-        }
         mLocation = Utility.getPreferredLocation(this);
+        if (findViewById(R.id.weather_detail_container)!=null){
+            mTwoPane=true;
+        if (savedInstanceState==null){
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.weather_detail_container,new DetailFragment(),DETAILFRAGMENT_TAG);
+        }
+
+        }else mTwoPane=false;
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (mLocation != Utility.getPreferredLocation(this)){
-            ForecastFragment forecastFragment= (ForecastFragment) getSupportFragmentManager().findFragmentByTag(FORECASTFRAGMENT_TAG);
+            ForecastFragment forecastFragment= (ForecastFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);
             forecastFragment.onLocationChanged();
             mLocation=Utility.getPreferredLocation(this);
         }

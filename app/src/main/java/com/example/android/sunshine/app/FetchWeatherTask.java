@@ -48,7 +48,6 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
         String unitsType = params[1];
         String type = "accurate";
         String appid = "b21e787cebb54337b23e4816da79da62";
-        int num = 16;
 
         try {
             final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast?";
@@ -63,7 +62,6 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
                     appendQueryParameter(POSTCODE_PARAM, locationSetting).
 //                        appendQueryParameter(FORMAT_PARAM, format).
         appendQueryParameter(UNITS_PARAM, unitsType).
-                            appendQueryParameter(DAYS_PARAM, Integer.toString(num)).
                             appendQueryParameter(TYPE_PARAM, type).
                             appendQueryParameter(APPID_PARAM, appid);
             Log.v(LOG_TAG, "Built Uri :" + buildUri);
@@ -90,7 +88,7 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
             }
             forecastJsonStr = stringBuffer.toString();
             Log.v(LOG_TAG, "forecast JSON string :" + forecastJsonStr);
-            getWeatherDataFromJson(forecastJsonStr,num,locationSetting);
+            getWeatherDataFromJson(forecastJsonStr,locationSetting);
         } catch (MalformedURLException e) {
             e.printStackTrace();
             return null;
@@ -117,7 +115,7 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
         return null;
     }
 
-    private void getWeatherDataFromJson(String weatherJsonStr, int num, String locationSetting)
+    private void getWeatherDataFromJson(String weatherJsonStr, String locationSetting)
             throws JSONException {
         final String JSON_LIST = "list";
         final String JSON_date = "dt";
@@ -147,7 +145,6 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
         double lon = coord.getDouble(JSON_LON);
 
         JSONArray days = weatherObject.getJSONArray(JSON_LIST);
-        String[] daysInfo = new String[num];
 
         long locationId = addLocation(locationSetting, cityName, lat, lon);
 
@@ -161,13 +158,13 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
             double temp_max;
             double temp_min;
             String description;
-            String weather_id;
+            int weather_id;
             long dateTime;
 
             JSONObject dayInfo = days.getJSONObject(i);
             dateTime = dayInfo.getLong(JSON_date);
             description = dayInfo.getJSONArray(JSON_WEATHER).getJSONObject(0).getString(JSON_DESCRIPTION);
-            weather_id = dayInfo.getJSONArray(JSON_WEATHER).getJSONObject(0).getString(JSON_WEATHER_ID);
+            weather_id = dayInfo.getJSONArray(JSON_WEATHER).getJSONObject(0).getInt(JSON_WEATHER_ID);
             JSONObject windInfo = dayInfo.getJSONObject(JSON_WIND);
             windSpeed = windInfo.getDouble(JSON_WIND_SPEED);
             degrees = windInfo.getDouble(JSON_WIND_DEGREES);

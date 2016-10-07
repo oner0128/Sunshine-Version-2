@@ -33,6 +33,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.android.sunshine.app.data.WeatherContract;
@@ -45,7 +46,7 @@ public class DetailActivity extends ActionBarActivity {
         setContentView(R.layout.activity_detail);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new DetailFragment())
+                    .add(R.id.weather_detail_container, new DetailFragment())
                     .commit();
         }
     }
@@ -75,117 +76,6 @@ public class DetailActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class DetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
-        final static String LOG_TAG = DetailFragment.class.getSimpleName();
-        final static String FORECAST_SHARE_HASHTAG = "#SunShineApp";
-        String mForecast;
-        Cursor cursor;
-        android.support.v7.widget.ShareActionProvider mShareActionProvider;
-        TextView tv_dayInfo_detail;
 
-        public DetailFragment() {
-            setHasOptionsMenu(true);
-        }
-
-        @Override
-        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-            super.onCreateOptionsMenu(menu, inflater);
-            inflater.inflate(R.menu.detailfragment, menu);
-            MenuItem menuItem = menu.findItem(R.id.action_share);
-            mShareActionProvider = (android.support.v7.widget.ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
-            if (mForecast != null) {
-                mShareActionProvider.setShareIntent(createShareForecastIntent());
-            } else {
-                android.util.Log.d(LOG_TAG, "A share action is null?");
-            }
-        }
-
-        private Intent createShareForecastIntent() {
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);//设置FLAG，返回时不会留在INTENT启动
-            // 的APP中,FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET在API21中被弃用，用 FLAG_ACTIVITY_NEW_DOCUMENT代替
-            shareIntent.putExtra(Intent.EXTRA_TEXT, mForecast + FORECAST_SHARE_HASHTAG);
-            shareIntent.setType("text/plain");
-            return shareIntent;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-
-            View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-//            String forecast=savedInstanceState.getString(Intent.EXTRA_TEXT);
-
-            return rootView;
-        }
-
-        public static final String[] DETAIL_COLUNMS = {
-                WeatherContract.WeatherEntry.TABLE_NAME + "." + WeatherContract.WeatherEntry._ID,
-                WeatherContract.WeatherEntry.COLUMN_DATE,
-                WeatherContract.WeatherEntry.COLUMN_SHORT_DESC,
-                WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
-                WeatherContract.WeatherEntry.COLUMN_MIN_TEMP,
-                WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING,
-                WeatherContract.LocationEntry.COLUMN_COORD_LAT,
-                WeatherContract.LocationEntry.COLUMN_COORD_LON,
-                WeatherContract.LocationEntry.COLUMN_CITY_NAME,};
-        static final int COL_WEATHER_ID = 0;
-        static final int COL_WEATHER_DATE = 1;
-        static final int COL_WEATHER_DESC = 2;
-        static final int COL_WEATHER_MAX_TEMP = 3;
-        static final int COL_WEATHER_MIN_TEMP = 4;
-        static final int COL_LOCATION_SETTING = 5;
-        static final int COL_COORD_LAT = 6;
-        static final int COL_COORD_LON = 7;
-        static final int COL_CITYNAME = 8;
-        static final int DETAIL_LOADER_ID = 2;
-
-        @Override
-        public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-            getLoaderManager().initLoader(DETAIL_LOADER_ID, null, this);
-            super.onActivityCreated(savedInstanceState);
-        }
-
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            Intent intent = getActivity().getIntent();
-            if (intent != null) {
-                mForecast = intent.getDataString();
-                return new CursorLoader(getActivity(),
-                        intent.getData(),DETAIL_COLUNMS, null, null, null);
-            }
-            return null;
-        }
-
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            if (data.moveToFirst()) {
-                String dateTime = Utility.formatDate(data.getLong(COL_WEATHER_DATE));
-                String cityName = data.getString(COL_CITYNAME);
-                String description = data.getString(COL_WEATHER_DESC);
-                double lat = data.getDouble(COL_COORD_LAT);
-                double lon = data.getDouble(COL_COORD_LON);
-                double maxTemp = data.getDouble(COL_WEATHER_MAX_TEMP);
-                double minTemp = data.getDouble(COL_WEATHER_MIN_TEMP);
-                mForecast = cityName + " \n " +
-                        dateTime + " \n " +
-                        "Lat: " + lat + "  " + "lon: " + lon + "\n" +
-                        "Temp: " + Utility.formatTemperature(maxTemp, Utility.isMetric(getActivity())) + "/" + Utility.formatTemperature(minTemp, Utility.isMetric(getActivity()))
-                        + " \n "+description;
-            }
-            tv_dayInfo_detail = (TextView) getView().findViewById(R.id.tv_dayInfo_detail);
-            tv_dayInfo_detail.setText(mForecast);
-            if (mShareActionProvider != null) {
-                mShareActionProvider.setShareIntent(createShareForecastIntent());
-            }
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {
-        }
-    }
 
 }
