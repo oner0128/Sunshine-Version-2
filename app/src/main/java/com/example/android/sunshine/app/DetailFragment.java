@@ -2,6 +2,7 @@ package com.example.android.sunshine.app;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -27,9 +28,21 @@ import com.example.android.sunshine.app.data.WeatherContract;
 public  class DetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     final static String LOG_TAG = DetailFragment.class.getSimpleName();
     final static String FORECAST_SHARE_HASHTAG = "#SunShineApp";
+    final static String DETAIL_URI="URI";
+    private Uri mUri;
     String mForecast;
     android.support.v7.widget.ShareActionProvider mShareActionProvider;
     TextView tv_dayInfo_detail;
+
+    public void onLocationChanged(String newLocation) {
+        Uri uri = mUri;
+        if (uri != null) {
+            long date = WeatherContract.WeatherEntry.getDateFromUri(uri);
+            Uri updatedUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(newLocation, date);
+            mUri = updatedUri;
+            getLoaderManager().restartLoader(DETAIL_LOADER_ID, null, this);
+        }
+    }
 
     public static class ViewHodler {
         public final ImageView iconView;
@@ -83,8 +96,10 @@ public  class DetailFragment extends Fragment implements LoaderManager.LoaderCal
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        Bundle arguments=getArguments();
+        if (arguments!=null)
+            mUri=arguments.getParcelable(DetailFragment.DETAIL_URI);
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-//            String forecast=savedInstanceState.getString(Intent.EXTRA_TEXT);
 
         return rootView;
     }
@@ -127,13 +142,11 @@ public  class DetailFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Intent intent = getActivity().getIntent();
-        if (intent == null||intent.getData()==null) {
-            return null;
+        if (mUri != null) {
+            return new CursorLoader(getActivity(),
+                    mUri, DETAIL_COLUNMS, null, null, null);
         }
-        mForecast = intent.getDataString();
-        return new CursorLoader(getActivity(),
-                intent.getData(), DETAIL_COLUNMS, null, null, null);
+        return null;
     }
 
     @Override
@@ -168,13 +181,6 @@ public  class DetailFragment extends Fragment implements LoaderManager.LoaderCal
             viewHodler.humidityView.setText("humidity: "+humidity+" %");
             viewHodler.windSpeeedView.setText("windSpeed: "+windSpeed+" km/h");
             viewHodler.pressureView.setText("pressure: "+pressure+" hPa");
-//                mForecast = cityName + " \n " +
-//                        dateTime + " \n " +
-//                        "Lat: " + lat + "  " + "lon: " + lon + "\n" +
-//                        "Temp: " + Utility.formatTemperature(getActivity(),maxTemp, Utility.isMetric(getActivity())) + "/" + Utility.formatTemperature(getActivity(),minTemp, Utility.isMetric(getActivity()))
-//                        + " \n "+description;
-//            tv_dayInfo_detail = (TextView) getView().findViewById(R.id.tv_dayInfo_detail);
-//            tv_dayInfo_detail.setText(mForecast);
         }
 
         if (mShareActionProvider != null) {

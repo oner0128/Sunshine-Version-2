@@ -60,14 +60,16 @@ public class ForecastAdapter extends CursorAdapter {
         // our view is pretty simple here --- just a text view
         // we'll keep the UI functional with a simple (and slow!) binding.
         int weatherId = cursor.getInt(ForecastFragment.COL_WEATHER_CONDITION_ID);
+        String description=cursor.getString(ForecastFragment.COL_WEATHER_DESC);
         ViewHodler viewHodler = (ViewHodler) view.getTag();
         //imageIcon
-         int viewType=getItemViewType(cursor.getPosition()); ;
+        int viewType=getItemViewType(cursor.getPosition()); ;
         viewHodler.iconView.setImageResource(Utility.getIconResourceForWeatherCondition(weatherId,viewType));
+        viewHodler.iconView.setContentDescription(description);
         //date
         viewHodler.dateView.setText(Utility.formatDate(cursor.getLong(ForecastFragment.COL_WEATHER_DATE)));
         //description
-        viewHodler.descriptionView.setText(cursor.getString(ForecastFragment.COL_WEATHER_DESC));
+        viewHodler.descriptionView.setText(description);
         //high And low temp
         boolean isMetric = Utility.isMetric(context);
         String format_highTemp = Utility.formatTemperature(context, cursor.getDouble(ForecastFragment.COL_WEATHER_MAX_TEMP), isMetric);
@@ -78,14 +80,17 @@ public class ForecastAdapter extends CursorAdapter {
 
     static final int VIEW_TYPE_TODAY = 0;
     static final int VIEW_TYPE_FUTURE = 1;
-
+    public static boolean mUseTodayLayout;
     @Override
     public int getItemViewType(int position) {
-        return (position == 0) ? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE;
+        return (position == 0&& !mUseTodayLayout) ? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE;
     }
 
     @Override
     public int getViewTypeCount() {
         return 2;
+    }
+    public  void setUseTodayLayout(boolean useTodayLayout){
+        mUseTodayLayout=useTodayLayout;
     }
 }

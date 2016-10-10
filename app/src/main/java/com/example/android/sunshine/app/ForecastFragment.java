@@ -5,11 +5,9 @@ package com.example.android.sunshine.app;
  */
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -30,7 +28,10 @@ import com.example.android.sunshine.app.data.WeatherContract;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class ForecastFragment extends Fragment implements  LoaderManager.LoaderCallbacks<Cursor> {
+    private static final String SELECTED_KEY = "position";
+    public static boolean mUseTodayLayout;
+    private static int smoothPosition=0;
     ListView listView;
     static ForecastAdapter forecastAdapter;
     public static final String[] FORECAST_COLUNMS = {
@@ -55,7 +56,11 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     static final int COL_CITY_NAME = 8;
     static final int COL_WEATHER_CONDITION_ID = 9;
     static final int FORECASE_LOADER_ID = 1;
-
+    public  void setUseTodayLayout(boolean useTodayLayout){
+        mUseTodayLayout=useTodayLayout;
+        if (forecastAdapter!=null)
+            forecastAdapter.setUseTodayLayout(mUseTodayLayout);
+    }
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         getLoaderManager().initLoader(FORECASE_LOADER_ID, null, this);
@@ -73,9 +78,11 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             final Bundle savedInstanceState) {
+
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         forecastAdapter = new ForecastAdapter(getActivity(), null, 0);
+        forecastAdapter.setUseTodayLayout(mUseTodayLayout);
         listView = (ListView) rootView.findViewById(R.id.listview_forecast);
         listView.setAdapter(forecastAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -84,14 +91,23 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                 Cursor cursor = (Cursor) parent.getItemAtPosition(position);
                 if (cursor != null) {
                     String locationSetting = Utility.getPreferredLocation(getActivity());
-                    Intent intent = new Intent(getActivity(), DetailActivity.class)
-                            .setData(WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
-                                    locationSetting, cursor.getLong(COL_WEATHER_DATE)));
-                    startActivity(intent);
+                    ((Callback)getActivity()).onItemSelected(
+                            WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
+                                    locationSetting,cursor.getLong(COL_WEATHER_DATE)));
                 }
+                smoothPosition =position;
             }
         });
+        if (savedInstanceState!=null&&savedInstanceState.containsKey(SELECTED_KEY))
+            smoothPosition=savedInstanceState.getInt(SELECTED_KEY);
         return rootView;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (smoothPosition !=ListView.INVALID_POSITION)
+            outState.putInt(SELECTED_KEY, smoothPosition);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -123,7 +139,6 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         weatherTask.execute(new String[]{location, unitType});
     }
 
-
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String locationSetting = Utility.getPreferredLocation(getActivity());
@@ -138,6 +153,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         forecastAdapter.swapCursor(data);
+        if (smoothPosition !=ListView.INVALID_POSITION)
+        listView.smoothScrollToPosition(smoothPosition);
     }
 
     @Override
@@ -148,5 +165,11 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     public void onLocationChanged() {
         updateWeather();
         getLoaderManager().restartLoader(FORECASE_LOADER_ID, null, this);
+    }
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        public void onItemSelected(Uri dateUri);
     }
 }

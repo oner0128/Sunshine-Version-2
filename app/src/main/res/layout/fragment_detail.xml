@@ -14,20 +14,21 @@
             android:id="@+id/list_item_date_textview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-condensed"
             android:gravity="left"
-            android:text="date" />
+            android:text="date"
+            android:textSize="24sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
             android:gravity="center"
             android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:gravity="center_vertical"
                 android:orientation="vertical">
 
@@ -35,17 +36,18 @@
                     android:id="@+id/list_item_high_textview"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
+                    android:fontFamily="sans-serif"
                     android:text="high"
-                    android:textSize="30dp" />
+                    android:textSize="80sp" />
 
                 <TextView
                     android:id="@+id/list_item_low_textview"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
+                    android:fontFamily="sans-serif"
                     android:text="low"
-                    android:textSize="30dp" />
+                    android:textColor="@color/grey_700"
+                    android:textSize="48dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -60,15 +62,18 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:gravity="center"
+
                     android:src="@mipmap/ic_launcher" />
 
                 <TextView
                     android:id="@+id/list_item_forecast_textview"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="descrip" />
+
+                    android:fontFamily="sans-serif-condensed"
+                    android:text="descrip"
+                    android:textColor="@color/grey_700"
+                    android:textSize="22dp" />
 
             </LinearLayout>
         </LinearLayout>
@@ -77,25 +82,31 @@
             android:id="@+id/list_item_humidity_textview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
             android:gravity="left"
-
-            android:text="humidity" />
+            android:paddingTop="4dp"
+            android:text="humidity"
+            android:textSize="22sp" />
 
         <TextView
             android:id="@+id/list_item_windSpeed_textview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
             android:gravity="left"
-
-            android:text="windSpeed" />
+            android:paddingTop="4dp"
+            android:text="windSpeed"
+            android:textSize="22sp" />
 
         <TextView
             android:id="@+id/list_item_pressure_textview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
             android:gravity="left"
-
-            android:text="pressure" />
+            android:paddingTop="4dp"
+            android:text="pressure"
+            android:textSize="22sp" />
 
     </LinearLayout>
 </ScrollView>
