@@ -39,6 +39,9 @@
             android:enabled="true"
             android:exported="true" />
 
+        <service
+            android:name=".service.SunShineService"
+            android:exported="false"></service>
     </application>
 
 </manifest>
