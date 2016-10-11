@@ -44,7 +44,7 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
             }
 
         } else {mTwoPane = false;
-        getSupportActionBar().setElevation(0f);}
+        getSupportActionBar().setElevation(0f);}//去除操作栏和Today选项的阴影
         ForecastFragment forecastFragment= (ForecastFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);
         forecastFragment.setUseTodayLayout(mTwoPane);
     }

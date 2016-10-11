@@ -15,15 +15,27 @@
  */
 package com.example.android.sunshine.app;
 
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.text.format.Time;
+import android.util.Log;
+
+import com.example.android.sunshine.app.data.WeatherContract;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
 public class Utility {
@@ -112,7 +124,6 @@ public class Utility {
 //        String monthDayString = monthDayFormat.format(dateInMillis);
 //        return monthDayString;
 //    }
-
     public static String getPreferredLocation(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getString(context.getString(R.string.pref_key_Location),
@@ -132,21 +143,23 @@ public class Utility {
                 .equals(context.getString(R.string.pref_temperature_Units_defaul));
     }
 
-    static String formatTemperature(Context context,double temperature, boolean isMetric) {
+    static String formatTemperature(Context context, double temperature, boolean isMetric) {
         double temp;
         if (!isMetric) {
             temp = 9 * temperature / 5 + 32;
         } else {
             temp = temperature;
         }
-        return context.getString(R.string.format_temperature,temp);
+        return context.getString(R.string.format_temperature, temp);
     }
 
     static String formatDate(long dateInSeconds) {
         Date date = new Date(dateInSeconds * 1000);
         return DateFormat.getDateTimeInstance(android.icu.text.DateFormat.SHORT, android.icu.text.DateFormat.SHORT, Locale.CHINESE).format(date);
     }
+
     static final int VIEW_TYPE_TODAY = 0;
+
     //通过weatherId获取相对应天气的图标ID，即drawable中的
     public static int getIconResourceForWeatherCondition(int weatherId, int view_type) {
         if (view_type == VIEW_TYPE_TODAY) {
@@ -188,4 +201,116 @@ public class Utility {
         }
         return -1;
     }
+    public static void getWeatherDataFromJson(Context context,String weatherJsonStr, String locationSetting)
+            throws JSONException {
+        final String LOG_TAG=context.getClass().getName();
+        final String JSON_LIST = "list";
+        final String JSON_date = "dt";
+        final String JSON_MAIN = "main";
+        final String JSON_CITY = "city";
+        final String JSON_CITYNAME = "name";
+        final String JSON_WEATHER = "weather";
+        final String JSON_DESCRIPTION = "description";
+        final String JSON_TEMP_MAX = "temp_max";
+        final String JSON_TEMP_MIN = "temp_min";
+        final String JSON_COORD = "coord";
+        final String JSON_LAT = "lat";
+        final String JSON_LON = "lon";
+        final String JSON_WEATHER_ID = "id";
+        final String JSON_HUMIDITY = "humidity";
+        final String JSON_PRESSURE = "pressure";
+        final String JSON_WIND = "wind";
+        final String JSON_WIND_SPEED = "speed";
+        final String JSON_WIND_DEGREES = "deg";
+
+        JSONObject weatherObject = new JSONObject(weatherJsonStr);
+        JSONObject city = weatherObject.getJSONObject(JSON_CITY);
+        String cityName = city.getString(JSON_CITYNAME);
+        JSONObject coord = city.getJSONObject(JSON_COORD);
+        double lat = coord.getDouble(JSON_LAT);
+        double lon = coord.getDouble(JSON_LON);
+
+        JSONArray days = weatherObject.getJSONArray(JSON_LIST);
+
+        long locationId = addLocation(context,locationSetting, cityName, lat, lon);
+
+        Vector<ContentValues> valuesVector = new Vector<>(days.length());
+
+        for (int i = 0; i < days.length(); i++) {
+            double windSpeed;
+            double degrees;
+            double humidity;
+            double pressure;
+            double temp_max;
+            double temp_min;
+            String description;
+            int weather_id;
+            long dateTime;
+
+            JSONObject dayInfo = days.getJSONObject(i);
+            dateTime = dayInfo.getLong(JSON_date);
+            description = dayInfo.getJSONArray(JSON_WEATHER).getJSONObject(0).getString(JSON_DESCRIPTION);
+            weather_id = dayInfo.getJSONArray(JSON_WEATHER).getJSONObject(0).getInt(JSON_WEATHER_ID);
+            JSONObject windInfo = dayInfo.getJSONObject(JSON_WIND);
+            windSpeed = windInfo.getDouble(JSON_WIND_SPEED);
+            degrees = windInfo.getDouble(JSON_WIND_DEGREES);
+
+            JSONObject mainInfo = dayInfo.getJSONObject(JSON_MAIN);
+            humidity = mainInfo.getDouble(JSON_HUMIDITY);
+            pressure = mainInfo.getDouble(JSON_PRESSURE);
+            temp_max = mainInfo.getDouble(JSON_TEMP_MAX);
+            temp_min = mainInfo.getDouble(JSON_TEMP_MIN);
+
+            ContentValues weatherValues = new ContentValues();
+
+
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_LOC_KEY, locationId);
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID, weather_id);
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_DATE, dateTime);
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_MAX_TEMP, temp_max);
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_MIN_TEMP, temp_min);
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_HUMIDITY, humidity);
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_PRESSURE, pressure);
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_WIND_SPEED, windSpeed);
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_DEGREES, degrees);
+            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_SHORT_DESC, description);
+            valuesVector.add(weatherValues);
+        }
+        if (valuesVector.size() > 0) {
+            ContentValues[] contentValues = new ContentValues[valuesVector.size()];
+            valuesVector.toArray(contentValues);
+            context.getContentResolver().bulkInsert(WeatherContract.WeatherEntry.CONTENT_URI, contentValues);
+        }
+
+        Log.d(LOG_TAG, "FetchWeatherTask complete." + valuesVector.size() + " inserted");
+    }
+
+    public static long addLocation(Context context,String locationSetting, String cityName, double lat, double lon) {
+        long locationId;
+
+        Cursor locationCursor = context.getContentResolver().query(WeatherContract.LocationEntry.CONTENT_URI,
+                new String[]{WeatherContract.LocationEntry._ID},
+                WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ?",
+                new String[]{locationSetting},
+                null);
+        if (locationCursor.moveToFirst()) {
+            int locationIdIndex = locationCursor.getColumnIndex(WeatherContract.LocationEntry._ID);
+            locationId = locationCursor.getLong(locationIdIndex);
+        } else {
+            ContentValues locationValues = new ContentValues();
+
+            locationValues.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME, cityName);
+            locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, lat);
+            locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LON, lon);
+            locationValues.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
+
+            Uri insertedUri = context.getContentResolver().insert(
+                    WeatherContract.LocationEntry.CONTENT_URI, locationValues);
+            locationId = ContentUris.parseId(insertedUri);
+        }
+        locationCursor.close();
+        return locationId;
+    }
+
+
 }

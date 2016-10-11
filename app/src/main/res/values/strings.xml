@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="http://schemas.android.com/apk/res-auto">
+    <string name="sync_account_type">sunshine.example.com</string>
+    <string name="content_authority">com.example.android.sunshine.app</string>
+
     <string name="today">Today</string>
 
     <!-- Date label when displaying tomorrow's weather forecast [CHAR LIMIT=20] -->
@@ -7,7 +10,7 @@
 
     <!-- Date format for displaying day of week and date (i.e. Mon Jun 1) [CHAR LIMIT=20] -->
     <string name="format_full_friendly_date"><xliff:g id="day">%1$s</xliff:g>, <xliff:g id="date">%2$s</xliff:g></string>
-    <string name="format_temperature"><xliff:g id="temp">%1.2f</xliff:g>\u00B0</string>
+    <string name="format_temperature"><xliff:g id="temp">%1.1f</xliff:g>\u00B0</string>
     <!--
          Used in Action Bar, and in AndroidManifest to tell the device the name of this app.
          It's to keep this short, so your launcher icon isn't displayed with "The greatest Wea"

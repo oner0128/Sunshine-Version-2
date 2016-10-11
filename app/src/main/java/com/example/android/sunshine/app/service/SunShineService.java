@@ -1,6 +1,7 @@
 package com.example.android.sunshine.app.service;
 
 import android.app.IntentService;
+import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -32,51 +33,14 @@ import java.util.Vector;
  * helper methods.
  */
 public class SunShineService extends IntentService {
-    public static final String LOG_TAG = SunShineService.class.getName();
+    public static final String LOG_TAG = SunShineService.class.getSimpleName();
     public static final String LOCATION_QUERY_EXTRA = "lqe";
     public static final String UNIT_TYPE = "unitType";
-    // TODO: Rename actions, choose action names that describe tasks that this
-    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    private static final String ACTION_FOO = "com.example.android.sunshine.app.service.action.FOO";
-    private static final String ACTION_BAZ = "com.example.android.sunshine.app.service.action.BAZ";
-
-    // TODO: Rename parameters
-    private static final String EXTRA_PARAM1 = "com.example.android.sunshine.app.service.extra.PARAM1";
-    private static final String EXTRA_PARAM2 = "com.example.android.sunshine.app.service.extra.PARAM2";
 
     public SunShineService() {
         super("SunShineService");
     }
 
-    /**
-     * Starts this service to perform action Foo with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionFoo(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, SunShineService.class);
-        intent.setAction(ACTION_FOO);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
-
-    /**
-     * Starts this service to perform action Baz with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, SunShineService.class);
-        intent.setAction(ACTION_BAZ);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
 
     @Override
     public void onStart(Intent intent, int startId) {
@@ -97,25 +61,14 @@ public class SunShineService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-            if (ACTION_FOO.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionFoo(param1, param2);
-            } else if (ACTION_BAZ.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionBaz(param1, param2);
-            }
-            String locationQuery = intent.getStringExtra(SunShineService.LOCATION_QUERY_EXTRA);
-            String unitType = intent.getStringExtra(SunShineService.UNIT_TYPE);
 
             HttpURLConnection httpURLConnection = null;
             BufferedReader reader = null;
             String forecastJsonStr = null;
 
-//            String format = "xml";
-            String locationSetting = locationQuery;
-            String unitsType = unitType;
+//            从Intent中传入LOCATION和UNIT_TYPE
+            String locationSetting = intent.getStringExtra(SunShineService.LOCATION_QUERY_EXTRA);
+            String unitsType = intent.getStringExtra(SunShineService.UNIT_TYPE);
             String type = "accurate";
             String appid = "b21e787cebb54337b23e4816da79da62";
 
@@ -123,10 +76,11 @@ public class SunShineService extends IntentService {
                 final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast?";
                 final String POSTCODE_PARAM = "id";
                 final String UNITS_PARAM = "units";
-                final String DAYS_PARAM = "cnt";
+                final String DAYS_PARAM = "cnt";//请求预测的天气情况数目
                 final String TYPE_PARAM = "type";
                 final String APPID_PARAM = "APPID";
 
+                //构建请求天气的API
                 Uri.Builder buildUri = Uri.parse(FORECAST_BASE_URL).buildUpon().
                         appendQueryParameter(POSTCODE_PARAM, locationSetting).
                         appendQueryParameter(UNITS_PARAM, unitsType).
@@ -155,7 +109,7 @@ public class SunShineService extends IntentService {
                     return;
                 }
                 forecastJsonStr = stringBuffer.toString();
-                Log.v(LOG_TAG, "forecast JSON string :" + forecastJsonStr);
+//                Log.v(LOG_TAG, "forecast JSON string :" + forecastJsonStr);//在控制台输出返回的天气数据
                 getWeatherDataFromJson(forecastJsonStr, locationSetting);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -289,21 +243,16 @@ public class SunShineService extends IntentService {
         return locationId;
     }
 
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionFoo(String param1, String param2) {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
+    public static class AlarmRecevier extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.v(LOG_TAG,intent.getStringExtra(SunShineService.LOCATION_QUERY_EXTRA)+"\tAlarm test");
+            Intent serviceIntent=new Intent(context,SunShineService.class);//使用IntentService加载天气数据
+            serviceIntent.putExtra(LOCATION_QUERY_EXTRA,intent.getStringExtra(LOCATION_QUERY_EXTRA));
+            serviceIntent.putExtra(UNIT_TYPE,intent.getStringExtra(UNIT_TYPE));
+            context.startService(serviceIntent);
+        }
     }
 
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
+
 }
