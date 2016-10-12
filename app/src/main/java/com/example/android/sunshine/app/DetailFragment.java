@@ -100,7 +100,6 @@ public  class DetailFragment extends Fragment implements LoaderManager.LoaderCal
         if (arguments!=null)
             mUri=arguments.getParcelable(DetailFragment.DETAIL_URI);
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-
         return rootView;
     }
 
@@ -154,7 +153,6 @@ public  class DetailFragment extends Fragment implements LoaderManager.LoaderCal
 
         if (data!=null&&data.moveToFirst()) {
             ViewHodler viewHodler = new ViewHodler(getView());
-            boolean isMetric=Utility.isMetric(getActivity());
 
             int weatherId=data.getInt(COL_WEATHER_CONDITION_ID);
             String dateTime = Utility.formatDate(data.getLong(COL_WEATHER_DATE));
@@ -165,8 +163,8 @@ public  class DetailFragment extends Fragment implements LoaderManager.LoaderCal
             String humidity = data.getString(COL_HUMIDITY);
             String windSpeed = data.getString(COL_WIND_SPEED);
             String pressure = data.getString(COL_PRESSURE);
-            String maxTemp = Utility.formatTemperature(getActivity(),data.getDouble(COL_WEATHER_MAX_TEMP),isMetric);
-            String minTemp = Utility.formatTemperature(getActivity(),data.getDouble(COL_WEATHER_MIN_TEMP),isMetric);
+            String maxTemp = Utility.formatTemperature(getActivity(),data.getDouble(COL_WEATHER_MAX_TEMP));
+            String minTemp = Utility.formatTemperature(getActivity(),data.getDouble(COL_WEATHER_MIN_TEMP));
 
             //imageIcon
             viewHodler.iconView.setImageResource(Utility.getIconResourceForWeatherCondition(weatherId,0));
@@ -181,6 +179,9 @@ public  class DetailFragment extends Fragment implements LoaderManager.LoaderCal
             viewHodler.humidityView.setText("humidity: "+humidity+" %");
             viewHodler.windSpeeedView.setText("windSpeed: "+windSpeed+" km/h");
             viewHodler.pressureView.setText("pressure: "+pressure+" hPa");
+
+            // We still need this for the share intent
+            mForecast = String.format("%s - %s - %s/%s", dateTime, description, maxTemp, minTemp);
         }
 
         if (mShareActionProvider != null) {

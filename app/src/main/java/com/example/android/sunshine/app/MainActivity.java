@@ -24,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.android.sunshine.app.data.WeatherContract;
+import com.example.android.sunshine.app.sync.SunshineSyncAdapter;
 
 public class MainActivity extends ActionBarActivity implements ForecastFragment.Callback {
     private String mLocation;
@@ -47,6 +48,7 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
         getSupportActionBar().setElevation(0f);}//去除操作栏和Today选项的阴影
         ForecastFragment forecastFragment= (ForecastFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);
         forecastFragment.setUseTodayLayout(mTwoPane);
+        SunshineSyncAdapter.initializeAdapter(this);
     }
 
     @Override

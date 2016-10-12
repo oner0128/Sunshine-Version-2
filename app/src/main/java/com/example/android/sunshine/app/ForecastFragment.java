@@ -4,10 +4,6 @@ package com.example.android.sunshine.app;
  * Created by hrong on 2016/4/22.
  */
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -17,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,7 +24,6 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.example.android.sunshine.app.data.WeatherContract;
-import com.example.android.sunshine.app.service.SunShineService;
 import com.example.android.sunshine.app.sync.SunshineSyncAdapter;
 
 
@@ -36,6 +32,7 @@ import com.example.android.sunshine.app.sync.SunshineSyncAdapter;
  */
 public class ForecastFragment extends Fragment implements  LoaderManager.LoaderCallbacks<Cursor> {
     private static final String SELECTED_KEY = "position";
+    private static final String LOG_TAG = ForecastFragment.class.getSimpleName();
     public static boolean mUseTodayLayout;
     private static int smoothPosition=0;
     ListView listView;
@@ -139,27 +136,14 @@ public class ForecastFragment extends Fragment implements  LoaderManager.LoaderC
     }
 
     private void updateWeather() {
-//        String location = Utility.getPreferredLocation(getActivity());
-//        String unitType = Utility.getUnitType(getActivity());
-//        Intent serviceIntent=new Intent(getActivity(),SunShineService.class);//使用IntentService加载天气数据
-//        serviceIntent.putExtra(SunShineService.LOCATION_QUERY_EXTRA,location);
-//        serviceIntent.putExtra(SunShineService.UNIT_TYPE,unitType);
-//        getActivity().startService(serviceIntent);
-
-//        Intent alarmIntent=new Intent(getActivity(),SunShineService.AlarmRecevier.class);
-//        alarmIntent.putExtra(SunShineService.LOCATION_QUERY_EXTRA,location);
-//        alarmIntent.putExtra(SunShineService.UNIT_TYPE,unitType);
-//        PendingIntent pendingIntent=PendingIntent.getBroadcast(getContext(),0,alarmIntent,PendingIntent.FLAG_ONE_SHOT);
-//        AlarmManager alarmManager= (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-//        alarmManager.set(AlarmManager.RTC_WAKEUP,System.currentTimeMillis()+5000,pendingIntent);
-
         SunshineSyncAdapter.syncImmediately(getActivity());
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String locationSetting = Utility.getPreferredLocation(getActivity());
-        long startTime = System.currentTimeMillis() / 1000-10800;//获取当前系统时间并转换为秒为单位，因为OpenWeather每三小时更新一次所以减10800s
+        long startTime = System.currentTimeMillis();//获取当前系统时间并转换为秒为单位，因为OpenWeather每三小时更新一次所以减10800s
+        startTime=Utility.formatTodayDate(startTime);
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
         Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
                 locationSetting, startTime);
