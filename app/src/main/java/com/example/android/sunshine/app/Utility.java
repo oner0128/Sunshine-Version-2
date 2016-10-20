@@ -337,6 +337,7 @@ public class Utility {
     //从和风天气获取
     public static void getHeFengWeatherDataFromJson(Context context, String weatherJsonStr, String locationSetting)
             throws JSONException {
+        long yesterday=0L;
         final String LOG_TAG = context.getClass().getName();
         final String JSON_DATA_3_0 = "HeWeather data service 3.0";
         final String JSON_date = "date";
@@ -388,6 +389,9 @@ public class Utility {
             //date
             date = dayInfo.getString(JSON_date);
             dateInMillis = Utility.formatDateStringToMilliSecond(date);
+            if (i==0){
+                yesterday=dateInMillis-60*60*24*1000;
+            }
             //conditionId and desc
             JSONObject condition = dayInfo.getJSONObject(JSON_WEATHER_CONDITON);
             weather_id = condition.getInt(JSON_WEATHER_ID);
@@ -423,6 +427,7 @@ public class Utility {
             ContentValues[] contentValues = new ContentValues[valuesVector.size()];
             valuesVector.toArray(contentValues);
             context.getContentResolver().bulkInsert(WeatherContract.WeatherEntry.CONTENT_URI, contentValues);
+            context.getContentResolver().delete(WeatherContract.WeatherEntry.CONTENT_URI, WeatherContract.WeatherEntry.COLUMN_DATE+" <= ?",new String[]{Long.toString(yesterday)});
         }
 
         Log.d(LOG_TAG, "FetchWeatherTask complete." + valuesVector.size() + " inserted");

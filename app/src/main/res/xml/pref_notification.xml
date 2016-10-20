@@ -1,7 +1,14 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <SwitchPreference
+        android:key="@string/pref_notifications_key"
+        android:title="@string/pref_notifications_title"
+        android:summaryOff="@string/pref_enable_notifications_false"
+        android:summaryOn="@string/pref_enable_notifications_true"
+        android:defaultValue="@string/pref_enable_notifications_default"></SwitchPreference>
     <!-- A 'parent' preference, which enables/disables child preferences (below)
          when checked/unchecked. -->
+
     <SwitchPreference
         android:defaultValue="true"
         android:key="notifications_new_message"

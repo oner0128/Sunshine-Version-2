@@ -30,11 +30,11 @@ import com.example.android.sunshine.app.sync.SunshineSyncAdapter;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class ForecastFragment extends Fragment implements  LoaderManager.LoaderCallbacks<Cursor> {
+public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String SELECTED_KEY = "position";
     private static final String LOG_TAG = ForecastFragment.class.getSimpleName();
     public static boolean mUseTodayLayout;
-    private static int smoothPosition=0;
+    private static int smoothPosition = 0;
     ListView listView;
     static ForecastAdapter forecastAdapter;
     public static final String[] FORECAST_COLUNMS = {
@@ -59,11 +59,13 @@ public class ForecastFragment extends Fragment implements  LoaderManager.LoaderC
     static final int COL_CITY_NAME = 8;
     static final int COL_WEATHER_CONDITION_ID = 9;
     static final int FORECASE_LOADER_ID = 1;
-    public  void setUseTodayLayout(boolean useTodayLayout){
-        mUseTodayLayout=useTodayLayout;
-        if (forecastAdapter!=null)
+
+    public void setUseTodayLayout(boolean useTodayLayout) {
+        mUseTodayLayout = useTodayLayout;
+        if (forecastAdapter != null)
             forecastAdapter.setUseTodayLayout(mUseTodayLayout);
     }
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         getLoaderManager().initLoader(FORECASE_LOADER_ID, null, this);
@@ -94,21 +96,21 @@ public class ForecastFragment extends Fragment implements  LoaderManager.LoaderC
                 Cursor cursor = (Cursor) parent.getItemAtPosition(position);
                 if (cursor != null) {
                     String locationSetting = Utility.getPreferredLocation(getActivity());
-                    ((Callback)getActivity()).onItemSelected(
+                    ((Callback) getActivity()).onItemSelected(
                             WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
-                                    locationSetting,cursor.getLong(COL_WEATHER_DATE)));
+                                    locationSetting, cursor.getLong(COL_WEATHER_DATE)));
                 }
-                smoothPosition =position;
+                smoothPosition = position;
             }
         });
-        if (savedInstanceState!=null&&savedInstanceState.containsKey(SELECTED_KEY))
-            smoothPosition=savedInstanceState.getInt(SELECTED_KEY);
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY))
+            smoothPosition = savedInstanceState.getInt(SELECTED_KEY);
         return rootView;
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        if (smoothPosition !=ListView.INVALID_POSITION)
+        if (smoothPosition != ListView.INVALID_POSITION)
             outState.putInt(SELECTED_KEY, smoothPosition);
         super.onSaveInstanceState(outState);
     }
@@ -124,13 +126,33 @@ public class ForecastFragment extends Fragment implements  LoaderManager.LoaderC
         super.onStart();
     }
 
+    private void openPreferenceLocationInMap() {
+        Cursor cursor;
+        if (forecastAdapter != null) {
+            cursor = forecastAdapter.getCursor();
+            cursor.moveToFirst();
+            String lat = Double.toString(cursor.getDouble(COL_COORD_LAT));
+            String lon = Double.toString(cursor.getDouble(COL_COORD_LON));
+            Uri geoLocation = Uri.parse("geo:" + lat + "," + lon);
+            Log.v(LOG_TAG, geoLocation.toString());
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(geoLocation);
+            if (intent.resolveActivity(getActivity().getPackageManager()) != null)
+                startActivity(intent);
+            else
+                Log.d(LOG_TAG, "couldn't call" + lat + "," + lon + ",no receiving apps installed");
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_map) {
+            openPreferenceLocationInMap();
+            return true;
+        }
         if (item.getItemId() == R.id.action_refresh) {
             updateWeather();
-        }
-        if (item.getItemId() == R.id.action_map) {
-            startActivity(new Intent());
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -143,7 +165,7 @@ public class ForecastFragment extends Fragment implements  LoaderManager.LoaderC
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String locationSetting = Utility.getPreferredLocation(getActivity());
         long startTime = System.currentTimeMillis();//获取当前系统时间并转换为秒为单位，因为OpenWeather每三小时更新一次所以减10800s
-        startTime=Utility.formatTodayDate(startTime);
+        startTime = Utility.formatTodayDate(startTime);
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
         Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
                 locationSetting, startTime);
@@ -154,8 +176,8 @@ public class ForecastFragment extends Fragment implements  LoaderManager.LoaderC
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         forecastAdapter.swapCursor(data);
-        if (smoothPosition !=ListView.INVALID_POSITION)
-        listView.smoothScrollToPosition(smoothPosition);
+        if (smoothPosition != ListView.INVALID_POSITION)
+            listView.smoothScrollToPosition(smoothPosition);
     }
 
     @Override
@@ -167,6 +189,7 @@ public class ForecastFragment extends Fragment implements  LoaderManager.LoaderC
         updateWeather();
         getLoaderManager().restartLoader(FORECASE_LOADER_ID, null, this);
     }
+
     public interface Callback {
         /**
          * DetailFragmentCallback for when an item has been selected.

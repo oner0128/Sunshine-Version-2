@@ -2,7 +2,6 @@ package com.example.android.sunshine.app.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
@@ -12,17 +11,14 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.SyncRequest;
 import android.content.SyncResult;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
-import com.example.android.sunshine.app.ForecastFragment;
 import com.example.android.sunshine.app.MainActivity;
 import com.example.android.sunshine.app.R;
 import com.example.android.sunshine.app.Utility;
@@ -41,7 +37,6 @@ import java.net.URL;
 public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = SunshineSyncAdapter.class.getSimpleName();
     public static final int SYNC_INTERVAL = 60 * 60 * 3;  // 3 hours
-    public static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
     public static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
     public static final int WEATHER_NOTIFICATION_ID = 1;
     private static final String[] NOTIFY_WEATHER_PROJECTION = {
@@ -93,7 +88,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
             if (inputStream == null) {
                 return;
             }
-            reader = new BufferedReader(new InputStreamReader(inputStream,"UTF-8"));
+            reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
 
             String line;
             while ((line = reader.readLine()) != null) {
@@ -103,7 +98,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                 return;
             }
             forecastJsonStr = stringBuffer.toString();
-            Log.v(LOG_TAG, "forecast JSON string :" + forecastJsonStr);//在控制台输出返回的天气数据
+//            Log.v(LOG_TAG, "forecast JSON string :" + forecastJsonStr);//在控制台输出返回的天气数据
             Utility.getHeFengWeatherDataFromJson(getContext(), forecastJsonStr, locationSetting);
             notifyWeather();
         } catch (MalformedURLException e) {
@@ -180,25 +175,17 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     /**
      * Helper method to schedule the sync adapter periodic execution
      */
-    public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
+    public static void configurePeriodicSync(Context context, int syncInterval) {
         Account account = getSyncAccount(context);
         String authority = context.getString(R.string.content_authority);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            // we can enable inexact timers in our periodic sync
-            SyncRequest request = new SyncRequest.Builder().syncPeriodic(syncInterval, flexTime).
-                    setSyncAdapter(account, authority).
-                    setExtras(new Bundle()).build();
-            ContentResolver.requestSync(request);
-        } else {
-            ContentResolver.addPeriodicSync(account, authority, new Bundle(), syncInterval);
-        }
+        ContentResolver.addPeriodicSync(account, authority, new Bundle(), syncInterval);
     }
 
     public static void onAccountCreated(Account newAccount, Context context) {
          /*
          * Since we've created an account
          */
-        SunshineSyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
+        SunshineSyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL);
         /*
          * Without calling setSyncAutomatically, our periodic sync will not be enabled.
          */
@@ -215,22 +202,26 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
     public void notifyWeather() {
         Context context = getContext();
+        boolean isNotify = PreferenceManager.getDefaultSharedPreferences(context).
+                getBoolean(
+                        context.getString(R.string.pref_notifications_key),
+                        Boolean.parseBoolean(context.getString(R.string.pref_enable_notifications_default)));
+        if (!isNotify) return;
         //checking the last update and notify if it' the first of the day
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         String lastNotificationKey = context.getString(R.string.pref_last_notification);
         long lastSync = sharedPreferences.getLong(lastNotificationKey, 0);
         if ((System.currentTimeMillis() - lastSync) >= DAY_IN_MILLIS) {
-//        if (true){
+//        if (true) {
             // Last sync was more than 1 day ago, let's send a notification with the weather.
             String locationQuery = Utility.getPreferredLocation(context);
-            Uri weatherQueryUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(locationQuery, System.currentTimeMillis() / 1000);
+            Uri weatherQueryUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(locationQuery, Utility.formatTodayDate(System.currentTimeMillis()));
             Cursor cursor = context.getContentResolver().query(weatherQueryUri, NOTIFY_WEATHER_PROJECTION, null, null, null);
             if (cursor.moveToFirst()) {
                 int weatherId = cursor.getInt(COL_WEATHER_ID);
                 double high = cursor.getDouble(COL_WEATHER_MAX_TEMP);
                 double low = cursor.getDouble(COL_WEATHER_MIN_TEMP);
                 String desc = cursor.getString(COL_WEATHER_DESC);
-                boolean isMetric = Utility.isMetric(context);
                 int iconId = Utility.getIconResourceForWeatherCondition(weatherId, Utility.VIEW_TYPE_FUTURE);
                 String title = context.getString(R.string.app_name);
 
@@ -264,7 +255,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
                 //refreshing last sync
                 SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putLong(lastNotificationKey, System.currentTimeMillis());
+                editor.putLong(lastNotificationKey, Utility.formatTodayDate(System.currentTimeMillis()));
                 editor.commit();
             }
         }
