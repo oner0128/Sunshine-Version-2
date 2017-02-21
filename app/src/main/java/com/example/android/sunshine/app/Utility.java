@@ -339,7 +339,7 @@ public class Utility {
             throws JSONException {
         long yesterday=0L;
         final String LOG_TAG = context.getClass().getName();
-        final String JSON_DATA_3_0 = "HeWeather data service 3.0";
+        final String JSON_HeWeather5 = "HeWeather5";
         final String JSON_date = "date";
         final String JSON_CITY_NAME = "city";
         final String JSON_CITYINFO = "basic";
@@ -359,7 +359,7 @@ public class Utility {
         final String JSON_WIND_DEGREES = "deg";
 
         JSONObject weatherObject = new JSONObject(weatherJsonStr);
-        JSONArray dataArray = weatherObject.getJSONArray(JSON_DATA_3_0);
+        JSONArray dataArray = weatherObject.getJSONArray(JSON_HeWeather5);
         JSONObject dataObject = dataArray.getJSONObject(0);
         JSONObject cityInfo = dataObject.getJSONObject(JSON_CITYINFO);
         String cityName = cityInfo.getString(JSON_CITY_NAME);

@@ -67,8 +67,8 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
         String appid = "af071ae33e6643368b43a115e597ace4";
 
         try {
-            final String FORECAST_BASE_URL = "https://api.heweather.com/x3/weather?";
-            final String POSTCODE_PARAM = "cityid";
+            final String FORECAST_BASE_URL = "https://free-api.heweather.com/v5/forecast?";
+            final String POSTCODE_PARAM = "city";
             final String APPID_PARAM = "key";
 
             //构建请求天气的API
